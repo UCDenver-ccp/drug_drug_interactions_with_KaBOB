@@ -1,0 +1,9 @@
+Paliperidone <-> Azithromycin (Cytochrome P450 (CYP3A7 based)): NO MENTIONS!!!!
+Paliperidone <-> Azithromycin (Cytochrome P450 (CYPIIIA4 based)): NO MENTIONS!!!!
+Paliperidone <-> Erythromycin (Cytochrome P450 (CYP3A7 based)): NO MENTIONS!!!!
+Paliperidone <-> Erythromycin (Cytochrome P450 (CYPIIIA4 based)): NO MENTIONS!!!!
+Paliperidone <-> Clarithromycin (Cytochrome P450 (CYP3A7 based)): NO MENTIONS!!!!
+Paliperidone <-> Isoniazid (Cytochrome P450 (CYP3A7 based)): NO MENTIONS!!!!
+Paliperidone <-> Clarithromycin (Cytochrome P450 (CYPIIIA4 based)): NO MENTIONS!!!!
+Paliperidone <-> Isoniazid (Cytochrome P450 (CYPIIIA4 based)): NO MENTIONS!!!!
+Mitotane <-> Spironolactone (Cytochrome P450 (CYP11B1 based)): NO MENTIONS!!!!
