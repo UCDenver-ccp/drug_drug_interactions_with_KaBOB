@@ -6,9 +6,9 @@ import urllib
 from itertools import permutations
 from time import sleep
 
-CSV_RESULTS_FROM_KABOB = 'drug-drug-interactions.csv'
+CSV_RESULTS_FROM_KABOB = 'drug-drug-interactions-with-labels.csv'
 OUTPUT_FILE = 'RxNav_output.txt'
-NOVEL_OUTPUT_FILE = 'RxNav_potentially_novel.txt'
+NOVEL_OUTPUT_FILE = 'RxNav_potentially_novel.tsv'
 
 o_file = open(OUTPUT_FILE, 'w')
 novel_file = open(NOVEL_OUTPUT_FILE, 'w')
@@ -48,7 +48,7 @@ for potential_inter in data_iter:
             continue
     if not found:
         o_file.write('%s <-> %s (%s): NO MENTIONS!!!!\n' % (potential_inter.drug1, potential_inter.drug2, potential_inter.pathway_step))
-        novel_file.write('%s <-> %s (%s)\n' % (potential_inter.drug1, potential_inter.drug2, potential_inter.pathway_step))
+        novel_file.write('%s\t%s\t%s\n' % (potential_inter.drug1, potential_inter.drug2, potential_inter.pathway_step))
 
 o_file.close()
 novel_file.close()

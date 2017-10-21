@@ -1,15 +1,15 @@
 #RUNS A SPARQL QUERY AND SAVES THE RESULTS AS A JSON FILE
-
-from SPARQLWrapper import SPARQLWrapper, JSON
 import json
 import socket
+import sys
+from SPARQLWrapper import SPARQLWrapper, JSON
 
 # Set the connection timeout as needed (some of these queries can run for a long time)
 timeout = 432000    # 5 days, in seconds
 socket.setdefaulttimeout(timeout)
 
 endpoint = SPARQLWrapper('http://amc-tantor.ucdenver.pvt:10035/repositories/kabob-dev')
-endpoint.setCredentials(user='better', passwd='better')
+endpoint.setCredentials(user=sys.argv[1], passwd=sys.argv[2])
 endpoint.setReturnFormat(JSON)
 
 q = '''PREFIX obo: <http://purl.obolibrary.org/obo/>
