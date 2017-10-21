@@ -1,0 +1,173 @@
+PREFIX obo: <http://purl.obolibrary.org/obo/>
+PREFIX kiao: <http://kabob.ucdenver.edu/iao/>
+PREFIX kro: <http://kabob.ucdenver.edu/ro/>
+PREFIX kbio: <http://kabob.ucdenver.edu/bio/>
+PREFIX iaouniprot: <http://kabob.ucdenver.edu/iao/uniprot/>
+PREFIX iaoreactome: <http://kabob.ucdenver.edu/iao/reactome/>
+PREFIX iaodrugbank: <http://kabob.ucdenver.edu/iao/drugbank/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX franzOption_memoryLimit: <franz:60g>
+PREFIX franzOption_memoryExhaustionWarningPercentage: <franz:90.0>
+PREFIX franzOption_clauseReorderer: <franz:identity>
+PREFIX franzOption_chunkProcessingAllowed: <franz:yes>
+
+#select ?drug_ice ?target_protein (group_concat(distinct ?target_protein_ice; separator=",") as ?target_ice) ?pathway_step_label ?other_target (group_concat(distinct ?other_target_ice; separator=",") as ?other_ice) ?drug2_ice {
+select distinct ?drug_ice ?drug_label ?target_protein ?target_protein_ice ?pathway_step_label ?other_target ?other_target_ice ?drug2_label ?drug2_ice {
+#select distinct ?drug_ice ?target_protein ?pathway_step_label ?other_target ?drug2_ice {
+  ?i rdfs:subClassOf obo:GO_0005488 .     # binding
+  ?i rdfs:subClassOf obo:MI_0407 .        # direct interaction
+  ?i rdfs:subClassOf ?r4 .
+  ?r4 owl:onProperty obo:RO_0000057 .     # has participant
+  ?r4 owl:someValuesFrom ?drug_entity .
+  ?drug_entity rdfs:subClassOf ?drug .
+  ?drug  rdfs:subClassOf obo:CHEBI_23888 .          # a drug
+  ?drug rdfs:label ?drug_label .
+  ?drug_ice obo:IAO_0000219 ?drug .
+  ?field obo:IAO_0000219 ?drug_ice .
+  ?field kiao:hasTemplate iaodrugbank:DrugBankDrugRecord_drugBankIdDataField1 .
+
+  ?i rdfs:subClassOf ?r3 .
+  ?r3 owl:onProperty obo:RO_0000057 .     # has participant
+  ?r3 owl:someValuesFrom ?t .
+  ?t rdfs:subClassOf ?target_protein .
+  ?target_protein rdfs:subClassOf obo:CHEBI_36080 .
+  ?target_protein_ice obo:IAO_0000219 ?target_protein .
+  ?pfield obo:IAO_0000219 ?target_protein_ice .
+  ?pfield kiao:hasTemplate iaouniprot:UniProtFileRecord_accessionDataField1 .
+
+  ?mol_superclass rdfs:subClassOf ?target_protein .
+  #?mol_superclass iaoreactome:connectsTo ?prot_fd .  # reactome protein file data
+
+  #?some_molecule (rdfs:subClassOf|rdfs:subClassOf/rdfs:subClassOf/owl:onClass/rdfs:subClassOf) ?mol_superclass .
+  ?some_molecule rdfs:subClassOf ?mol_superclass .
+  ?r2 owl:someValuesFrom ?some_molecule .
+  ?r2 owl:onProperty obo:RO_0000057 .                 # find participants in this reaction
+  ?pathway_step rdfs:subClassOf ?r2 .
+  # pathway_step could be any interaction so we narrow it to a reactome record
+  ?pathway_step iaoreactome:connectsTo ?reactomeRecord .
+  ?pathway_step rdfs:label ?pathway_step_label .
+
+#  ?r1 owl:someValuesFrom ?pathway_step.               # find a step in this pathway, either a subpathway or a biochemical reaction
+#  ?r1 owl:onProperty kro:has_proper_part .
+#  ?p rdfs:subClassOf ?r1 .
+#  ?p iaoreactome:connectsTo ?p_record .               # find a reactome pathway
+#  ?p_record rdf:type iaoreactome:PathwayFileData .
+#  ?p rdfs:label ?pathway_label .
+
+  ?pathway_step rdfs:subClassOf ?r_part2 .
+  ?r_part2 owl:onProperty obo:RO_0000057 .
+  ?r_part2 owl:someValuesFrom ?other_molecule .
+  FILTER (?other_molecule != ?some_molecule)
+
+  # the molecule can either be a protein or a complex
+  # the * is not necessary here as there seems to be just one level of subClass relations if a single protein
+  #?other_molecule (rdfs:subClassOf/rdfs:subClassOf/owl:onClass/rdfs:subClassOf/rdfs:subClassOf) ?other_target .
+  #?other_molecule (rdfs:subClassOf/rdfs:subClassOf) ?other_target .
+  ?other_molecule rdfs:subClassOf ?other_molecule_sc .
+  ?other_molecule_sc rdfs:subClassOf ?other_target .
+  ?other_target rdfs:subClassOf obo:CHEBI_36080 .
+
+  FILTER (?other_target != ?target_protein)
+
+  ?other_target_ice obo:IAO_0000219 ?other_target .
+  ?pfield2 obo:IAO_0000219 ?other_target_ice .
+  ?pfield2 kiao:hasTemplate iaouniprot:UniProtFileRecord_accessionDataField1 .
+
+  ?t2 rdfs:subClassOf ?other_target .
+  ?r_part3 owl:someValuesFrom ?t2 .
+  ?r_part3 owl:onProperty obo:RO_0000057 .
+
+  ?interaction rdfs:subClassOf ?r_part3 .
+  ?interaction rdfs:subClassOf obo:GO_0005488 .     # binding
+  ?interaction rdfs:subClassOf obo:MI_0407 .
+  ?interaction rdfs:subClassOf ?r_part4 .
+  ?r_part4 owl:onProperty obo:RO_0000057 .
+  ?r_part4 owl:someValuesFrom ?drug2_sc .
+  ?drug2_sc rdfs:subClassOf ?drug2 .
+  ?drug2 rdfs:subClassOf obo:CHEBI_23888 .
+  ?drug2 rdfs:label ?drug2_label .
+  ?drug2_ice obo:IAO_0000219 ?drug2 .
+  ?field2 obo:IAO_0000219 ?drug2_ice .
+  ?field2 kiao:hasTemplate iaodrugbank:DrugBankDrugRecord_drugBankIdDataField1 .
+
+  FILTER (?drug != ?drug2)
+  }
+  #GROUP BY ?drug_ice ?target_protein ?pathway_step_label ?other_target ?drug2_ice
+LIMIT 100000
+
+
+
+# -----------------------------------------------------------------------------------------
+
+# Drugs in KaBOB
+
+select (count (distinct ?drug) as ?count) {
+  ?drug_id kiao:denotesSubClassOf obo:CHEBI_23888 .
+  ?drug_id obo:IAO_0000219 ?drug .
+}
+
+
+# -----------------------------------------------------------------------------------------
+
+# Proteins in KaBOB
+
+select (count (distinct ?protein) as ?count) {
+  ?protein_id kiao:denotesSubClassOf obo:CHEBI_36080 .
+  ?protein_id obo:IAO_0000219 ?protein .
+}
+
+
+# -----------------------------------------------------------------------------------------
+
+# Proteins participating in some kind of process
+
+select (count (distinct ?protein) as ?count) {
+  ?protein_id kiao:denotesSubClassOf obo:CHEBI_36080 .
+  ?protein_id obo:IAO_0000219 ?protein .
+  ?protein_sc rdfs:subClassOf ?protein .
+  ?restriction owl:someValuesFrom ?protein_sc .
+}
+
+
+# -----------------------------------------------------------------------------------------
+
+# Participating proteins with a Reactome record behind them
+
+select (count (distinct ?protein) as ?count) {
+  ?protein_id kiao:denotesSubClassOf obo:CHEBI_36080 .
+  ?protein_id obo:IAO_0000219 ?protein .
+  ?protein_sc rdfs:subClassOf* ?protein .
+## reactome entities
+  ?protein iaoreactome:connectsTo ?protein_record .
+  ?restriction owl:someValuesFrom ?protein_sc .
+}
+
+
+# -----------------------------------------------------------------------------------------
+
+# Number of "physical entities" (not protein, complex, dna, rna, or small molecule)
+
+select (count (distinct ?protein) as ?count) {
+  #?protein_id kiao:denotesSubClassOf obo:CHEBI_36080 .
+  ?protein_id obo:IAO_0000219 ?protein .
+  ?protein_sc rdfs:subClassOf* ?protein .
+  ?protein iaoreactome:connectsTo ?protein_record .
+  ?protein_record rdf:type iaoreactome:PhysicalEntityFileData .
+  ?restriction owl:someValuesFrom ?protein_sc .
+}
+
+
+# -----------------------------------------------------------------------------------------
+
+# Number of complexes
+
+select (count (distinct ?protein) as ?count) {
+  #?protein_id kiao:denotesSubClassOf obo:CHEBI_36080 .
+  ?protein_id obo:IAO_0000219 ?protein .
+  ?protein_sc rdfs:subClassOf* ?protein .
+  ?protein iaoreactome:connectsTo ?protein_record .
+  ?protein_record rdf:type iaoreactome:ComplexFileData .
+  ?restriction owl:someValuesFrom ?protein_sc .
+}
+
